@@ -1,9 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CustomerTable } from "@/components/customers/customer-table";
-import { mockCustomers } from "@/lib/customers/mock-customers";
+import { getCustomers } from "@/lib/customers/queries";
 
-export default function CustomersPage() {
+export default async function CustomersPage() {
+  const { customers, error } = await getCustomers();
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -21,7 +23,13 @@ export default function CustomersPage() {
           <Button type="button">Add Customer</Button>
         </div>
       </div>
-      <CustomerTable customers={mockCustomers} />
+      {error ? (
+        <p role="alert" className="text-sm text-destructive">
+          We couldn&apos;t load your customers right now. Please try again later.
+        </p>
+      ) : (
+        <CustomerTable customers={customers} />
+      )}
     </div>
   );
 }

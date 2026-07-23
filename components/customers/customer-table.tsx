@@ -7,7 +7,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { CustomerEmptyState } from "@/components/customers/customer-empty-state";
-import type { Customer } from "@/lib/customers/mock-customers";
+import type { Customer } from "@/lib/customers/types";
 
 function formatCreatedAt(createdAt: string) {
   return new Date(createdAt).toLocaleDateString("en-US", {
