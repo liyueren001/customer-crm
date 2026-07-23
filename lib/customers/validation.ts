@@ -36,6 +36,13 @@ const PHONE_MAX_LENGTH = 30;
 const NOTES_MAX_LENGTH = 2000;
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// A customer id can arrive from a route param or a submitted form, both of
+// which are untrusted; malformed ids are rejected before ever reaching a query.
+export function isValidCustomerId(id: string): boolean {
+  return UUID_PATTERN.test(id);
+}
 
 function readField(formData: FormData, key: string): string {
   const value = formData.get(key);

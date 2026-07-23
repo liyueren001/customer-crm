@@ -3,18 +3,36 @@
 import Link from "next/link";
 import { useActionState } from "react";
 
-import { createCustomer } from "@/lib/customers/actions";
-import { initialCustomerFormState } from "@/lib/customers/validation";
+import { createCustomer, updateCustomer } from "@/lib/customers/actions";
+import {
+  initialCustomerFormState,
+  type CustomerFormValues,
+} from "@/lib/customers/validation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-export function CustomerForm() {
-  const [state, formAction, pending] = useActionState(
-    createCustomer,
-    initialCustomerFormState,
-  );
+interface CustomerFormProps {
+  customerId?: string;
+  initialValues?: CustomerFormValues;
+  submitLabel?: string;
+  pendingLabel?: string;
+}
+
+export function CustomerForm({
+  customerId,
+  initialValues,
+  submitLabel = "Save Customer",
+  pendingLabel = "Saving...",
+}: CustomerFormProps) {
+  const action = customerId
+    ? updateCustomer.bind(null, customerId)
+    : createCustomer;
+  const initialState = initialValues
+    ? { error: null, fieldErrors: {}, values: initialValues }
+    : initialCustomerFormState;
+  const [state, formAction, pending] = useActionState(action, initialState);
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
@@ -98,7 +116,7 @@ export function CustomerForm() {
 
       <div className="flex items-center gap-4">
         <Button type="submit" disabled={pending}>
-          {pending ? "Saving..." : "Save Customer"}
+          {pending ? pendingLabel : submitLabel}
         </Button>
         <Link
           href="/dashboard/customers"

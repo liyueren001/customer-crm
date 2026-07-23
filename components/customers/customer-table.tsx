@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import {
   Table,
   TableBody,
@@ -6,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { buttonVariants } from "@/components/ui/button";
 import { CustomerEmptyState } from "@/components/customers/customer-empty-state";
 import type { Customer } from "@/lib/customers/types";
 
@@ -30,6 +33,7 @@ export function CustomerTable({ customers }: { customers: Customer[] }) {
           <TableHead>Email</TableHead>
           <TableHead>Phone</TableHead>
           <TableHead>Created</TableHead>
+          <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -44,6 +48,14 @@ export function CustomerTable({ customers }: { customers: Customer[] }) {
               <time dateTime={customer.createdAt}>
                 {formatCreatedAt(customer.createdAt)}
               </time>
+            </TableCell>
+            <TableCell className="text-right">
+              <Link
+                href={`/dashboard/customers/${customer.id}/edit`}
+                className={buttonVariants({ variant: "outline", size: "sm" })}
+              >
+                Edit
+              </Link>
             </TableCell>
           </TableRow>
         ))}

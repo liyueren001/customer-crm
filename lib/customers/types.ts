@@ -5,3 +5,7 @@ export interface Customer {
   phone: string | null;
   createdAt: string;
 }
+
+export interface CustomerDetail extends Customer {
+  notes: string | null;
+}
