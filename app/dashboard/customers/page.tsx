@@ -1,4 +1,6 @@
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+
+import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CustomerTable } from "@/components/customers/customer-table";
 import { getCustomers } from "@/lib/customers/queries";
@@ -20,7 +22,9 @@ export default async function CustomersPage() {
             placeholder="Search customers by name"
             className="sm:w-64"
           />
-          <Button type="button">Add Customer</Button>
+          <Link href="/dashboard/customers/new" className={buttonVariants()}>
+            Add Customer
+          </Link>
         </div>
       </div>
       {error ? (
