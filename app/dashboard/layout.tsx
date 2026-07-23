@@ -1,12 +1,15 @@
 import { AppHeader } from "@/components/layout/app-header";
 import { MainNav } from "@/components/layout/main-nav";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { requireSession } from "@/lib/auth/session";
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  await requireSession();
+
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <header className="border-b border-border">
