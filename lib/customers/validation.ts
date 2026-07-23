@@ -38,6 +38,21 @@ const NOTES_MAX_LENGTH = 2000;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+export const CUSTOMER_SEARCH_MAX_LENGTH = 100;
+
+// searchParams may hand back a single string, an array (repeated ?q=), or
+// undefined; only a single trimmed, length-capped string is ever used as a
+// search term.
+export function readCustomerSearchQuery(raw: string | string[] | undefined): string {
+  const value = Array.isArray(raw) ? raw[0] : raw;
+
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  return value.trim().slice(0, CUSTOMER_SEARCH_MAX_LENGTH);
+}
+
 // A customer id can arrive from a route param or a submitted form, both of
 // which are untrusted; malformed ids are rejected before ever reaching a query.
 export function isValidCustomerId(id: string): boolean {

@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { CustomerEmptyState } from "@/components/customers/customer-empty-state";
 import { DeleteCustomerButton } from "@/components/customers/delete-customer-button";
@@ -21,8 +22,26 @@ function formatCreatedAt(createdAt: string) {
   });
 }
 
-export function CustomerTable({ customers }: { customers: Customer[] }) {
+interface CustomerTableProps {
+  customers: Customer[];
+  isSearching?: boolean;
+}
+
+export function CustomerTable({ customers, isSearching = false }: CustomerTableProps) {
   if (customers.length === 0) {
+    if (isSearching) {
+      return (
+        <Card className="items-center text-center">
+          <CardHeader className="items-center">
+            <CardTitle>No customers match your search.</CardTitle>
+            <CardDescription>
+              Try a different name, or use the Clear link to see all customers.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      );
+    }
+
     return <CustomerEmptyState />;
   }
 

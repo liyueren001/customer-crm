@@ -25,19 +25,35 @@ export type GetCustomerByIdResult =
   | { status: "not_found" }
   | { status: "error" };
 
+// Escapes ILIKE metacharacters (the escape character itself, %, and _) so a
+// search term is matched literally rather than as a wildcard pattern.
+function escapeLikePattern(value: string): string {
+  return value.replace(/[\\%_]/g, (match) => `\\${match}`);
+}
+
 // RLS (customers_select_own) scopes this query to the caller's own rows via
 // auth.uid(); no owner_id filter is added here on purpose. See docs/database.md.
-export async function getCustomers(): Promise<GetCustomersResult> {
+// The optional name filter is layered on top of that RLS scope, so it can
+// only ever narrow the caller's own rows further, never widen them.
+export async function getCustomers(query = ""): Promise<GetCustomersResult> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  const baseQuery = supabase
     .from("customers")
-    .select("id, name, email, phone, created_at")
-    .order("created_at", { ascending: false });
+    .select("id, name, email, phone, created_at");
+
+  const filteredQuery = query
+    ? baseQuery.ilike("name", `%${escapeLikePattern(query)}%`)
+    : baseQuery;
+
+  const { data, error } = await filteredQuery.order("created_at", {
+    ascending: false,
+  });
 
   if (error) {
-    // error.message is a Postgres/query diagnostic, never row data.
-    console.error("[customers] Failed to load customers:", error.message);
+    // Never log error.message/details/hint or the search query: only a fixed
+    // operation name and, if present, a non-sensitive Postgres/PostgREST code.
+    console.error("get_customers_failed", error.code ? { code: error.code } : undefined);
     return { customers: [], error: true };
   }
 
