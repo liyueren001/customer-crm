@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 
 export default function Home() {
   return (
@@ -10,7 +10,9 @@ export default function Home() {
         A simple place for individual professionals and small businesses to
         track their own customers.
       </p>
-      <Button render={<Link href="/dashboard">Go to Dashboard</Link>} />
+      <Link href="/dashboard" className={buttonVariants()}>
+        Go to Dashboard
+      </Link>
     </div>
   );
 }
