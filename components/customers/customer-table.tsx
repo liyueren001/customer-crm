@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { buttonVariants } from "@/components/ui/button";
 import { CustomerEmptyState } from "@/components/customers/customer-empty-state";
+import { DeleteCustomerButton } from "@/components/customers/delete-customer-button";
 import type { Customer } from "@/lib/customers/types";
 
 function formatCreatedAt(createdAt: string) {
@@ -50,12 +51,15 @@ export function CustomerTable({ customers }: { customers: Customer[] }) {
               </time>
             </TableCell>
             <TableCell className="text-right">
-              <Link
-                href={`/dashboard/customers/${customer.id}/edit`}
-                className={buttonVariants({ variant: "outline", size: "sm" })}
-              >
-                Edit
-              </Link>
+              <div className="flex items-center justify-end gap-2">
+                <Link
+                  href={`/dashboard/customers/${customer.id}/edit`}
+                  className={buttonVariants({ variant: "outline", size: "sm" })}
+                >
+                  Edit
+                </Link>
+                <DeleteCustomerButton customerId={customer.id} />
+              </div>
             </TableCell>
           </TableRow>
         ))}
