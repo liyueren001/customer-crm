@@ -53,6 +53,52 @@ export function readCustomerSearchQuery(raw: string | string[] | undefined): str
   return value.trim().slice(0, CUSTOMER_SEARCH_MAX_LENGTH);
 }
 
+// Conservative ceiling for a small per-user CRM: at 10 rows/page this covers
+// 10,000 records, far beyond any realistic customer list. Anything beyond
+// this is treated as invalid rather than clamped, so it never reaches a
+// range calculation as a huge (if bounded) offset.
+const MAX_CUSTOMER_PAGE_NUMBER = 1000;
+
+const PAGE_NUMBER_PATTERN = /^[0-9]+$/;
+
+// Only a single, well-formed positive integer is accepted. Repeated ?page=
+// params are ambiguous (which one did the caller mean?), so they default to
+// page 1 rather than silently picking the first or last value.
+export function readCustomerPageNumber(raw: string | string[] | undefined): number {
+  if (Array.isArray(raw) || typeof raw !== "string") {
+    return 1;
+  }
+
+  if (!PAGE_NUMBER_PATTERN.test(raw)) {
+    return 1;
+  }
+
+  const parsed = Number(raw);
+
+  if (!Number.isSafeInteger(parsed) || parsed < 1 || parsed > MAX_CUSTOMER_PAGE_NUMBER) {
+    return 1;
+  }
+
+  return parsed;
+}
+
+// The only place that turns sanitized state back into a URL, so a link can
+// never carry anything beyond the known-good `q` and `page` parameters.
+export function buildCustomersUrl(params: { query?: string; page?: number }): string {
+  const searchParams = new URLSearchParams();
+
+  if (params.query) {
+    searchParams.set("q", params.query);
+  }
+
+  if (params.page && params.page > 1) {
+    searchParams.set("page", String(params.page));
+  }
+
+  const queryString = searchParams.toString();
+  return queryString ? `/dashboard/customers?${queryString}` : "/dashboard/customers";
+}
+
 // A customer id can arrive from a route param or a submitted form, both of
 // which are untrusted; malformed ids are rejected before ever reaching a query.
 export function isValidCustomerId(id: string): boolean {

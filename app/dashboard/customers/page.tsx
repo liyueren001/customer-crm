@@ -1,24 +1,49 @@
+import { redirect } from "next/navigation";
 import Link from "next/link";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CustomerTable } from "@/components/customers/customer-table";
-import { getCustomers } from "@/lib/customers/queries";
+import { CustomerPagination } from "@/components/customers/customer-pagination";
+import { CUSTOMER_PAGE_SIZE, getCustomers } from "@/lib/customers/queries";
 import {
+  buildCustomersUrl,
   CUSTOMER_SEARCH_MAX_LENGTH,
+  readCustomerPageNumber,
   readCustomerSearchQuery,
 } from "@/lib/customers/validation";
 
 export default async function CustomersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string | string[] }>;
+  searchParams: Promise<{
+    q?: string | string[];
+    page?: string | string[];
+  }>;
 }) {
-  const { q } = await searchParams;
+  const { q, page } = await searchParams;
   const query = readCustomerSearchQuery(q);
   const isSearching = query.length > 0;
+  const requestedPage = readCustomerPageNumber(page);
 
-  const { customers, error } = await getCustomers(query);
+  const { customers, totalCount, error } = await getCustomers(
+    query,
+    requestedPage,
+  );
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / CUSTOMER_PAGE_SIZE));
+
+  // requestedPage is only ever a validated positive integer here, so this
+  // redirect target is always <= totalPages, which means the next request
+  // can never trigger this branch again — no redirect loop.
+  if (!error && requestedPage > totalPages) {
+    redirect(
+      buildCustomersUrl({
+        query: isSearching ? query : undefined,
+        page: totalPages,
+      }),
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -60,7 +85,16 @@ export default async function CustomersPage({
           We couldn&apos;t load your customers right now. Please try again later.
         </p>
       ) : (
-        <CustomerTable customers={customers} isSearching={isSearching} />
+        <>
+          <CustomerTable customers={customers} isSearching={isSearching} />
+          {totalCount > 0 && (
+            <CustomerPagination
+              currentPage={requestedPage}
+              totalPages={totalPages}
+              query={isSearching ? query : undefined}
+            />
+          )}
+        </>
       )}
     </div>
   );

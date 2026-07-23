@@ -15,8 +15,11 @@ interface CustomerDetailRow extends CustomerRow {
   notes: string | null;
 }
 
+export const CUSTOMER_PAGE_SIZE = 10;
+
 export interface GetCustomersResult {
   customers: Customer[];
+  totalCount: number;
   error: boolean;
 }
 
@@ -33,28 +36,35 @@ function escapeLikePattern(value: string): string {
 
 // RLS (customers_select_own) scopes this query to the caller's own rows via
 // auth.uid(); no owner_id filter is added here on purpose. See docs/database.md.
-// The optional name filter is layered on top of that RLS scope, so it can
-// only ever narrow the caller's own rows further, never widen them.
-export async function getCustomers(query = ""): Promise<GetCustomersResult> {
+// The optional name filter and the { count: "exact" } total are both computed
+// over that same RLS-scoped, filtered query, so pagination can only ever
+// narrow or count the caller's own rows, never another user's.
+export async function getCustomers(
+  query = "",
+  page = 1,
+): Promise<GetCustomersResult> {
   const supabase = await createClient();
 
   const baseQuery = supabase
     .from("customers")
-    .select("id, name, email, phone, created_at");
+    .select("id, name, email, phone, created_at", { count: "exact" });
 
   const filteredQuery = query
     ? baseQuery.ilike("name", `%${escapeLikePattern(query)}%`)
     : baseQuery;
 
-  const { data, error } = await filteredQuery.order("created_at", {
-    ascending: false,
-  });
+  const from = (page - 1) * CUSTOMER_PAGE_SIZE;
+  const to = from + CUSTOMER_PAGE_SIZE - 1;
+
+  const { data, error, count } = await filteredQuery
+    .order("created_at", { ascending: false })
+    .range(from, to);
 
   if (error) {
     // Never log error.message/details/hint or the search query: only a fixed
     // operation name and, if present, a non-sensitive Postgres/PostgREST code.
     console.error("get_customers_failed", error.code ? { code: error.code } : undefined);
-    return { customers: [], error: true };
+    return { customers: [], totalCount: 0, error: true };
   }
 
   const rows = (data ?? []) as CustomerRow[];
@@ -67,6 +77,7 @@ export async function getCustomers(query = ""): Promise<GetCustomersResult> {
       phone: row.phone,
       createdAt: row.created_at,
     })),
+    totalCount: count ?? 0,
     error: false,
   };
 }
