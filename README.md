@@ -44,8 +44,8 @@ Versions are taken from `package.json`. A caret (`^`) reflects the range declare
 
 ## Architecture and Security
 
-- **Server-side data access.** All customer reads and writes go through server-only code (Server Components, Server Actions, and route handlers in `lib/customers`). Customer data is never queried directly from the browser.
-- **Session handling.** Authenticated sessions are managed with the existing Supabase SSR setup (`@supabase/ssr`), which stores the session in secure, httpOnly cookies. The application does not implement its own token or session storage.
+- **Server-side data access.** All customer reads and writes go through server-only code (Server Components, Server Actions, and server-side query modules in `lib/customers`). Customer data is never queried directly from the browser.
+- **Session handling.** Authenticated sessions are cookie-based sessions managed by the Supabase SSR setup (`@supabase/ssr`). The application does not implement its own token or session storage.
 - **Ownership enforced in the database.** The `customers` table has Row Level Security enabled, and each policy restricts access to rows where `owner_id` matches the authenticated user. Even if application code had a bug, the database itself refuses cross-user reads and writes.
 - **Owner assigned by the database.** The `owner_id` column defaults to `auth.uid()`, so ownership is derived from the verified session rather than from any value supplied by the client. The insert policy's `with check` rejects any attempt to write a different owner.
 - **No privileged credentials in the app.** The application uses only the public Supabase project URL and publishable key. The service-role key (which bypasses Row Level Security) is not used anywhere in the application and is never exposed to the browser.
